@@ -217,7 +217,6 @@ class SVNClient(SCMClient):
         result = []
 
         linenum = 0
-
         while linenum < len(diff_content):
             line = diff_content[linenum]
             if line.startswith(self.BINARY_STRING):
@@ -240,9 +239,6 @@ class SVNClient(SCMClient):
         result = []
 
         linenum = 0
-
-        SEP = "=" * 67
-
         while linenum < len(diff_content):
             line = diff_content[linenum]
             if line.startswith('Index: ') \
