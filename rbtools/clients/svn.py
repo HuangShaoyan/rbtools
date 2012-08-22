@@ -160,7 +160,7 @@ class SVNClient(SCMClient):
         """
         diff = execute(cmd, split_lines=True)
         diff = self.handle_renames(diff)
-        diff = self.convert_to_absolute_paths(diff, repository_info)
+        diff = self.convert_paths(diff, repository_info)
 
         return ''.join(diff)
 
@@ -205,11 +205,11 @@ class SVNClient(SCMClient):
 
         return result
 
-    def convert_to_absolute_paths(self, diff_content, repository_info):
+    def convert_paths(self, diff_content, repository_info):
         """
-        Converts relative paths in a diff output to absolute paths.
-        This handles paths that have been svn switched to other parts of the
-        repository.
+        unquote the path
+        We don't need to convert to absolute path.
+        Basedir will be set when upload diff and it is relative to ReviewBoard repo.
         """
 
         result = []
@@ -237,13 +237,7 @@ class SVNClient(SCMClient):
                         path = urllib.unquote(
                             "%s/%s" % (repository_info.base_path, file))
                     else:
-                        info = self.svn_info(file, True)
-                        if info is None:
-                            result.append(orig_line)
-                            continue
-                        url  = info["URL"]
-                        root = info["Repository Root"]
-                        path = urllib.unquote(url[len(root):])
+                        path = urllib.unquote(file)
 
                     line = front + " " + path + rest
 

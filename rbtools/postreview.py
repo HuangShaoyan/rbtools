@@ -1236,6 +1236,8 @@ def main():
     if not server.check_api_version():
         die("Unable to log in with the supplied username and password.")
 
+    # TODO After init server instance, should use server.info?
+    # For svn, local info may be different from server info
     if repository_info.supports_changesets:
         changenum = tool.get_changenum(args)
     else:
