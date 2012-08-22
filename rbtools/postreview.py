@@ -218,7 +218,7 @@ class ReviewBoardServer(object):
         ]
 
         opener = urllib2.build_opener(*handlers)
-        opener.addheaders = [('User-agent', 'RBTools/' + get_package_version())]
+        opener.addheaders = [('User-agent', 'YYReview/' + get_package_version())]
         urllib2.install_opener(opener)
 
     def check_api_version(self):
@@ -960,7 +960,7 @@ def tempt_fate(server, tool, changenum, diff_content=None,
 
 def parse_options(args):
     parser = OptionParser(usage="%prog [-pond] [-r review_id] [changenum]",
-                          version="RBTools " + get_version_string())
+                          version="YYReview " + get_version_string())
 
     parser.add_option("-p", "--publish",
                       dest="publish", action="store_true",
@@ -1210,7 +1210,7 @@ def main():
 
     args = parse_options(sys.argv[1:])
 
-    debug('RBTools %s' % get_version_string())
+    debug('YYReview %s' % get_version_string())
     debug('Home = %s' % homepath)
 
     repository_info, tool = scan_usable_client(options)
