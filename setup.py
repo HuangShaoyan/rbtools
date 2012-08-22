@@ -25,48 +25,28 @@ use_setuptools()
 from setuptools import setup, find_packages
 from setuptools.command.test import test
 
-from rbtools import get_package_version, is_release, VERSION
+from rbtools import get_package_version
 
 
-PACKAGE_NAME = 'RBTools'
-
-if is_release():
-    download_url = "http://downloads.reviewboard.org/releases/%s/%s.%s/" % \
-                   (PACKAGE_NAME, VERSION[0], VERSION[1])
-else:
-    download_url = "http://downloads.reviewboard.org/nightlies/"
-
-
-install_requires = []
-
-
-try:
-    import json
-except ImportError:
-    install_requires.append('simplejson')
-
+PACKAGE_NAME = 'YYReview'
 
 setup(name=PACKAGE_NAME,
       version=get_package_version(),
       license="MIT",
-      description="Command line tools for use with Review Board",
+      description="Command line tools for use with Review Board for YY",
       entry_points = {
           'console_scripts': [
-              'post-review = rbtools.postreview:main',
+              'yyreview = rbtools.postreview:main',
           ],
       },
-      install_requires=install_requires,
-      dependency_links = [
-          download_url,
-      ],
+      install_requires=[],
+      dependency_links = [],
       packages=find_packages(),
       include_package_data=True,
-      maintainer="Christian Hammond",
-      maintainer_email="chipx86@chipx86.com",
-      url="http://www.reviewboard.org/",
-      download_url=download_url,
+      maintainer="Shaoyan Huang",
+      maintainer_email="huangshaoyan1982@gmail.com",
       classifiers=[
-          "Development Status :: 4 - Beta",
+          "Development Status :: 3 - Alpha",
           "Environment :: Console",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: MIT License",
