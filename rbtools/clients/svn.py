@@ -205,6 +205,36 @@ class SVNClient(SCMClient):
 
         return result
 
+    def remove_binary_revision(self, diff_content):
+        """
+        svn 1.7 diff outputs revision info for binary file.
+        remove it to keep compatible with server.
+        """
+        result = []
+
+        linenum = 0
+
+        BINARY_STRING = "Cannot display: file marked as a binary type."
+        SEP = "=" * 67
+
+        while linenum < len(diff_content):
+            line = diff_content[linenum]
+            if line == BINARY_STRING:
+                result += diff_content[linenum:linenum + 2]
+                linenum += 2
+
+                if diff_content[linenum] == diff_content[linenum - 4] \
+                    and diff_content[linenum + 1] == SEP \
+                    and diff_content[linenum + 2].startswith("---") \
+                    and diff_content[linenum + 3].startswith("+++"):
+                    linenum += 4
+                    continue
+
+            result.append(line)
+            linenum += 1
+
+        return result
+
     def convert_paths(self, diff_content, repository_info):
         """
         unquote the path

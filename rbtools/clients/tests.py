@@ -11,7 +11,7 @@ from rbtools.clients import RepositoryInfo
 from rbtools.clients.git import GitClient
 from rbtools.clients.mercurial import MercurialClient
 from rbtools.clients.perforce import PerforceClient
-from rbtools.clients.svn import SVNRepositoryInfo
+from rbtools.clients.svn import SVNClient, SVNRepositoryInfo
 from rbtools.tests import OptionsStub
 from rbtools.utils.filesystem import load_config_files
 from rbtools.utils.process import execute
@@ -698,6 +698,29 @@ class SVNClientTests(SCMClientTests):
             info._get_relative_path('/trunk/myproject', '/trunk/myproject'),
             '/')
 
+    def test_remove_binary_revision_for_svn_1_7(self):
+        """Testing remove revision info of binary file for svn 1.7"""
+        client = SVNClient(options=self.options)
+
+        diff = "Index: foo.png\n" \
+               "===================================================================\n" \
+               "Cannot display: file marked as a binary type.\n" \
+               "svn:mime-type = application/octet-stream\n" \
+               "Index: foo.png\n" \
+               "===================================================================\n" \
+               "--- foo.png\t(revision 4)\n" \
+               "+++ foo.png\t(working copy)\n" \
+               "\n" \
+               "Property changes on: foo.png\n" \
+               "___________________________________________________________________\n" \
+               "Added: svn:mime-type\n" \
+               "## -0,0 +1 ##\n" \
+               "+application/octet-stream\n" \
+               "\ No newline at end of property\n" \
+
+        self.assertEqual(EXPECTED_SVN_DIFF_ADD_BINARY.splitlines(),
+            client.remove_binary_revision(diff.splitlines()))
+
 
 class PerforceClientTests(SCMClientTests):
     def setUp(self):
@@ -909,3 +932,17 @@ Index: foo.txt
 +moenia Romae. Albanique patres, atque altae
 +moenia Romae. Musa, mihi causas memora, quo numine laeso,
  \n"""
+
+EXPECTED_SVN_DIFF_ADD_BINARY = """\
+Index: foo.png
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+
+Property changes on: foo.png
+___________________________________________________________________
+Added: svn:mime-type
+## -0,0 +1 ##
++application/octet-stream
+\ No newline at end of property
+"""
