@@ -235,6 +235,28 @@ class SVNClient(SCMClient):
 
         return result
 
+    def remove_property_change_revision(self, diff_content):
+        result = []
+
+        linenum = 0
+
+        SEP = "=" * 67
+
+        while linenum < len(diff_content):
+            line = diff_content[linenum]
+            if line.startswith('Index: ') \
+                and diff_content[linenum + 1] == SEP \
+                and diff_content[linenum + 2].startswith("---") \
+                and diff_content[linenum + 3].startswith("+++") \
+                and diff_content[linenum + 5].startswith("Property changes on: "):
+                linenum += 5
+                continue
+
+            result.append(line)
+            linenum += 1
+
+        return result
+
     def convert_paths(self, diff_content, repository_info):
         """
         unquote the path

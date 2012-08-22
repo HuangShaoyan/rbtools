@@ -721,6 +721,26 @@ class SVNClientTests(SCMClientTests):
         self.assertEqual(EXPECTED_SVN_DIFF_ADD_BINARY.splitlines(),
             client.remove_binary_revision(diff.splitlines()))
 
+    def test_remove_property_change_revision_for_svn_1_7(self):
+        """Testing remove revisiob info of property change for svn 1.7"""
+
+        client = SVNClient(options=self.options)
+
+        diff = "Index: foo\n" \
+               "===================================================================\n" \
+               "--- foo\t(revision 4)\n" \
+               "+++ foo\t(working copy)\n" \
+               "\n" \
+               "Property changes on: foo\n" \
+               "___________________________________________________________________\n" \
+               "Modified: svn:externals\n" \
+               "## -1 +1 ##\n" \
+               "-https://svn.example.com/abc foo1\n" \
+               "+https://svn.example.com/abc foo2\n"
+
+        self.assertEqual(EXPECTED_SVN_DIFF_CHANGE_PROPERTY.splitlines(),
+            client.remove_property_change_revision(diff.splitlines()))
+
 
 class PerforceClientTests(SCMClientTests):
     def setUp(self):
@@ -946,3 +966,13 @@ Added: svn:mime-type
 +application/octet-stream
 \ No newline at end of property
 """
+
+EXPECTED_SVN_DIFF_CHANGE_PROPERTY = """\
+Property changes on: foo
+___________________________________________________________________
+Modified: svn:externals
+## -1 +1 ##
+-https://svn.example.com/abc foo1
++https://svn.example.com/abc foo2
+"""
+
