@@ -221,6 +221,26 @@ class ReviewBoardServer(object):
         opener.addheaders = [('User-agent', 'YYReview/' + get_package_version())]
         urllib2.install_opener(opener)
 
+    def is_yyreview_must_update(self):
+        try:
+            rsp = self.api_get('yyreviewupdate')
+            debug('update config: %s' % rsp)
+            local_version = get_package_version()
+            debug('local version: %s' % local_version)
+
+            if local_version in rsp['must-update']:
+                debug('local version is %s, must update' % local_version)
+                if local_version in rsp['tip']:
+                    print rsp['tip'][local_version]
+                else:
+                    print rsp['tip']['default']
+                return True
+
+            return False
+
+        except APIError, e:
+            die("Unable to access YYReview update config.")
+
     def check_api_version(self):
         """Checks the API version on the server to determine which to use."""
         try:
@@ -1231,6 +1251,9 @@ def main():
         sys.exit(1)
 
     server = ReviewBoardServer(server_url, repository_info, cookie_file)
+
+    if server.is_yyreview_must_update():
+        sys.exit(0)
 
     # Handle the case where /api/ requires authorization (RBCommons).
     if not server.check_api_version():
