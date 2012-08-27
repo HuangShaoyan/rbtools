@@ -223,15 +223,17 @@ class SVNClient(SCMClient):
                 result += diff_content[linenum:linenum + 2]
                 linenum += 2
 
-                if diff_content[linenum] == diff_content[linenum - 4] \
+                # binary file modification don't have more lines
+                if linenum < len(diff_content) \
+                    and diff_content[linenum] == diff_content[linenum - 4] \
                     and diff_content[linenum + 1].startswith(self.INDEX_SEP) \
                     and diff_content[linenum + 2].startswith("---") \
                     and diff_content[linenum + 3].startswith("+++"):
                     linenum += 4
                     continue
-
-            result.append(line)
-            linenum += 1
+            else:
+                result.append(line)
+                linenum += 1
 
         return result
 

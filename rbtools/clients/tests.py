@@ -698,6 +698,21 @@ class SVNClientTests(SCMClientTests):
             info._get_relative_path('/trunk/myproject', '/trunk/myproject'),
             '/')
 
+    def test_remove_binary_revision_simple_case(self):
+        """
+        Testing remove revision info of binary file, 
+        simple case, without revision and property change
+        """
+        client = SVNClient(options=self.options)
+
+        diff = "Index: foo.png\n" \
+               "===================================================================\n" \
+               "Cannot display: file marked as a binary type.\n" \
+               "svn:mime-type = application/octet-stream\n" \
+
+        self.assertEqual(EXPECTED_SVN_DIFF_BINARY_SIMPLE.splitlines(),
+            client.remove_binary_revision(diff.splitlines()))
+
     def test_remove_binary_revision_for_svn_1_7(self):
         """Testing remove revision info of binary file for svn 1.7"""
         client = SVNClient(options=self.options)
@@ -952,6 +967,13 @@ Index: foo.txt
 +moenia Romae. Albanique patres, atque altae
 +moenia Romae. Musa, mihi causas memora, quo numine laeso,
  \n"""
+
+EXPECTED_SVN_DIFF_BINARY_SIMPLE = """\
+Index: foo.png
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+"""
 
 EXPECTED_SVN_DIFF_ADD_BINARY = """\
 Index: foo.png
