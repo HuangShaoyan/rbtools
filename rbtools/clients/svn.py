@@ -168,6 +168,48 @@ class SVNClient(SCMClient):
 
         return ''.join(diff)
 
+    def find_copyfrom(self, path, repository_info):
+        """
+        A helper function for handle_renames
+
+        The output of 'svn info' reports the "Copied From" header when invoked
+        on the exact path that was copied. If the current file was copied as a
+        part of a parent or any further ancestor directory, 'svn info' will not
+        report the origin. Thus it is needed to ascend from the path until
+        either a copied path is found or there are no more path components to
+        try.
+
+        For svn 1.7.x, the 'copy from revision' is lost, so we have to patch
+        the revision part of from line.
+        """
+        def smart_join(p1, p2):
+            if p2:
+                return os.path.join(p1, p2).replace('\\', '/')
+
+            return p1
+
+        path1 = path
+        path2 = None
+
+        while path1:
+            info = self.svn_info(path1)
+            url = info.get('Copied From URL', None)
+
+            if url:
+                from_path1 = urllib.unquote(url[len(repository_info.path):])
+                from_rev = '(revision %s)' % info["Copied From Rev"]
+                return (smart_join(from_path1, path2), from_rev)
+
+            # Strip one component from path1 to path2
+            path1, tmp = os.path.split(path1)
+
+            if path1 == "" or path1 == "/":
+                path1 = None
+            else:
+                path2 = smart_join(tmp, path2)
+
+        return None
+
     def handle_renames(self, diff_content, repository_info):
         """
         The output of svn diff is incorrect when the file in question came
@@ -194,17 +236,11 @@ class SVNClient(SCMClient):
             # This is where we decide how mangle the previous '--- '
             if self.DIFF_NEW_FILE_LINE_RE.match(line):
                 to_file, _ = self.parse_filename_header(line[4:])
-                info       = self.svn_info(to_file, True)
-                if info is not None and info.has_key("Copied From URL"):
-                    url       = info["Copied From URL"]
-                    from_file = urllib.unquote(url[len(repository_info.path):])
-                    new_from_line = from_line.replace(to_file, from_file)
-
-                    # svn 1.7.x output "(working copy)" for origin file when renames
-                    # It should be the revision of the origin file
-                    from_rev  = info["Copied From Rev"]
+                copied_from = self.find_copyfrom(to_file, repository_info)
+                if copied_from is not None:
+                    new_from_line = from_line.replace(to_file, copied_from[0])
                     if '(working copy)' in new_from_line:
-                        new_from_line = new_from_line.replace('(working copy)', '(revision %s)' % from_rev)
+                        new_from_line = new_from_line.replace('(working copy)', copied_from[1])
                     result.append(new_from_line)
                 else:
                     result.append(from_line) #as is, no copy performed
