@@ -94,7 +94,7 @@ class SVNClient(SCMClient):
 
         return get_url_prop(repository_info.path)
 
-    def diff(self, files):
+    def diff(self, files, repository_info):
         """
         Performs a diff across all modified files in a Subversion repository.
 
@@ -102,7 +102,7 @@ class SVNClient(SCMClient):
         makes parent diffs possible, so we never return a parent diff
         (the second value in the tuple).
         """
-        return (self.do_diff(["svn", "diff", "--diff-cmd=diff"] + files),
+        return (self.do_diff(["svn", "diff", "--diff-cmd=diff"] + files, repository_info),
                 None)
 
     def diff_changelist(self, changelist):
@@ -161,14 +161,14 @@ class SVNClient(SCMClient):
         paths to absolute.
         """
         diff = execute(cmd, split_lines=True)
-        diff = self.handle_renames(diff)
+        diff = self.handle_renames(diff, repository_info)
         diff = self.remove_binary_revision(diff)
         diff = self.remove_property_change_revision(diff)
         diff = self.convert_paths(diff, repository_info)
 
         return ''.join(diff)
 
-    def handle_renames(self, diff_content):
+    def handle_renames(self, diff_content, repository_info):
         """
         The output of svn diff is incorrect when the file in question came
         into being via svn mv/cp. Although the patch for these files are
@@ -197,9 +197,15 @@ class SVNClient(SCMClient):
                 info       = self.svn_info(to_file, True)
                 if info is not None and info.has_key("Copied From URL"):
                     url       = info["Copied From URL"]
-                    root      = info["Repository Root"]
-                    from_file = urllib.unquote(url[len(root):])
-                    result.append(from_line.replace(to_file, from_file))
+                    from_file = urllib.unquote(url[len(repository_info.path):])
+                    new_from_line = from_line.replace(to_file, from_file)
+
+                    # svn 1.7.x output "(working copy)" for origin file when renames
+                    # It should be the revision of the origin file
+                    from_rev  = info["Copied From Rev"]
+                    if '(working copy)' in new_from_line:
+                        new_from_line = new_from_line.replace('(working copy)', '(revision %s)' % from_rev)
+                    result.append(new_from_line)
                 else:
                     result.append(from_line) #as is, no copy performed
 
